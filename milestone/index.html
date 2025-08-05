@@ -1,0 +1,109 @@
+<html>
+	<head>
+		<script src='Doc1'></script>
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+		<style>
+			h1 {
+				text-align: center;
+			}
+
+			.container {
+				margin: 0 auto;
+				padding: 60px 20%;
+			}
+
+			figure {
+				text-align: center;
+			}
+
+			img {
+				display: inline-block;
+			}
+
+			body {
+				font-family: 'Inter', sans-serif;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 20px 0;
+			}
+			th, td {
+				border: 1px solid #ddd;
+				padding: 8px;
+				text-align: left;
+			}
+			th {
+				background-color: #f2f2f2;
+			}
+			ul {
+				padding-left: 20px;
+			}
+			@media print {
+				@page {
+					margin: 10mm 5mm; 
+				}
+				h1 { font-size: 1.8em; }
+				body, .container {
+					margin: 0 !important;
+					padding: 0 !important;
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>VR GS: Real-Time 3D Gaussian Splatting for VR Game-Scene Reconstruction</h1>
+			<div style="text-align: center;">Group members: Songyan Li, Yihong Zhai, Yuanchen Li, Yanshi Liang</div>
+
+			<br>
+			<a href="https://yllivct.github.io/finalproject-vr/milestone/html">Milestone Webpage</a><br>
+			<a href="https://drive.google.com/file/d/1MzD5LHoiZVL2wPolukJR-IG7gIvv3_my/view?usp=sharing">Milestone Video</a><br>
+			<a href="https://docs.google.com/presentation/d/1zrh7PrxnLo0BjYi28rzM8k6LwslG4eN-/edit?usp=sharing/">Presentation Slides</a><br>
+			<h2>Project Summary</h2>
+			<p>This project aims to enable real-time visualization of reconstructed 3D environments using 3D Gaussian Splatting (3DGS) within VR headsets. We investigate the full pipeline from data acquisition and incremental training to rendering inside VR.</p>
+
+			<h2>Accomplishments So Far</h2>
+			<p>We have made partial progress on integrating the Splatfacto workflow. We successfully launched Splatfacto on a cloud GPU instance and confirmed that it can process training data from our test scenes. However, the full connection between the incremental training loop and our real-time data stream is still in development. While we have a basic understanding of the input and output structure and training process, we are continuing to experiment with how best to automate data feeding and monitor scene updates dynamically during training.</p>
+
+			<h2>Preliminary Results</h2>
+			<div style="display: flex; flex-direction: column; align-items: center;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td style="text-align: center;">
+					<img src="1.png" width="300px"/>
+					</td>
+					<td style="text-align: center;">
+					<img src="2.png" width="300px"/>
+					</td>
+					<td style="text-align: center;">
+					<img src="3.png" width="300px"/>
+					</td>
+				</tr>
+				</table>
+			</div>
+
+			<h2>Reflection on Progress</h2>
+			<p>We initially planned to reproduce and analyze an open-source Gaussian renderer for outdoor scenes, but eventually decided to drop this task. The codebase was difficult to work with due to limited documentation and complex dependencies, and its pipeline differed significantly from the Splatfacto system we are using. Given our limited time and the need to focus on core objectives—such as integrating game data, refining training results, and achieving VR rendering—we chose to reallocate our efforts accordingly.</p>
+
+			<h2>Updated Work Plan</h2>
+			<p>We divide the project into two phases to achieve real-time 3DGS-based VR rendering of game scenes:</p>
+
+			<h3>Phase 1: Static Scene VR Demo (Baseline)</h3>
+			<ul>
+			<li><strong>Data Collection</strong>: Capture RGB frames and camera poses from a fixed game sequence.</li>
+			<li><strong>3DGS Training</strong>: Train a static Gaussian model using Splatfacto and evaluate quality and performance.</li>
+			<li><strong>VR Integration</strong>: Render the trained scene in VR with stereo support, targeting ≥90 FPS and full 6DoF tracking.</li>
+			</ul>
+
+			<h3>Phase 2: Real-Time Streaming Pipeline (Advanced)</h3>
+			<ul>
+			<li><strong>Live Frame Capture</strong>: Extract frames and poses from running games without modifying source code.</li>
+			<li><strong>Incremental Training</strong>: Update the 3DGS model in &lt;1s with new frames using an online fine-tuning loop.</li>
+			<li><strong>Live VR Rendering</strong>: Continuously update the VR view with minimal latency and maintain high visual fidelity and stable performance.</li>
+			</ul>
+
+		</div>
+	</body>
+</html>
