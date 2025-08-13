@@ -58,8 +58,21 @@
     <section id="pipeline">
       <h2>Pipeline</h2>
       <section id="data-capture">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td style="text-align: center;">
+					<img src="1-1.png" width="350px"/>
+					</td>
+					<td style="text-align: center;">
+					<img src="1-2.png" width="350px"/>
+					</td>
+				</tr>
+				</table>
+
+			</div>
         <h3>Data capture and calibration</h3>
-        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>.</p>
+        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>. Due to the complexity of the game graphics, we have applied blurring techniques to the images, including Gaussian blur and K-means clustering for color simplification, to reduce modeling difficulty.</p>
       </section>
       <section id="online-adaptation">
         <h3>Online adaptation</h3>
@@ -156,15 +169,28 @@ while True:
     last_snapshot = take_lightweight_snapshot(model)
     SEQ += 1</code></pre>
       </section>
-
+      <h3>Shaders </h3>
+      <p>The sketch‑style effect is achieved via a screen‑space composite shader. Once all Gaussians have been rendered into a temporary render target (_GaussianSplatRT), the composite shader processes this texture in a full‑screen pass and produces the final output. The algorithm comprises several stages:</p>
+    
+    <p><strong>Greyscale quantisation</strong> – The RGB colour of each pixel is converted to linear space and then to a single luminance value. This value is quantised into a specified number of tone bands (e.g. 4–8), producing flat regions of consistent brightness reminiscent of tonal blocks in pencil sketches.</p>
+    
+    <p><strong>Sobel edge detection</strong> – A Sobel operator computes the gradient magnitude of the luminance. Pixels with high gradient are considered edges. A smooth threshold and softness parameter control the strength of the resulting contour lines; edges are used later to darken outlines and emphasise structure.</p>
+    
+    <p><strong>Cross‑hatching overlay</strong> – For darker quantised tones, the shader overlays sets of parallel hatch lines at multiple angles (e.g. 0°, 45°, 90°, 135°). Each line set is generated procedurally using screen‑space UV coordinates. Darker areas receive more hatch layers, while lighter areas receive few or none. Parameters allow users to adjust hatch density and strength.</p>
+    
+    <p><strong>Paper grain noise</strong> – A simple pseudo‑random noise function adds small perturbations to the luminance, simulating paper grain. This texture varies per pixel and can be scaled via a noise strength parameter.</p>
+    
+    <p><strong>Compositing and output</strong> – The quantised greyscale image, edge mask, hatch overlays and noise are combined. The edges multiply the result to darken outlines. The final colour is multiplied by a tint (default white) to allow for tonal changes. The shader uses the blend mode Blend One Zero, which overwrites the colour buffer, ensuring the effect is visible even when no opaque background is drawn.</p>
+    
+    <p>The shader runs as the last step in the URP renderer, after all opaque and transparent passes, to avoid being overwritten by subsequent features. Because the algorithm operates only on the screen buffer, its complexity is independent of the number of Gaussians rendered.</p>
       <div style="display: flex; flex-direction: column; align-items: center;">
 				<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
 					<td style="text-align: center;">
-					<img src="1.jpg" width="300px"/>
+					<img src="1.jpg" width="350px"/>
 					</td>
 					<td style="text-align: center;">
-					<img src="2.jpg" width="300px"/>
+					<img src="2.jpg" width="350px"/>
 					</td>
 				</tr>
 				</table>
@@ -217,7 +243,10 @@ while True:
       <p><a href="https://drive.google.com/file/d/1mqMTbkxleVjBEfiODGoGE1zssvUoDfW-/view?usp=sharing" target="_blank" rel="noopener noreferrer">video1</a></p>
       <p><a href="https://drive.google.com/file/d/1oApVXycO-IqkhuH1vR7c_Y3HpGADu_q8/view?usp=sharing" target="_blank" rel="noopener noreferrer">video2</a></p>
     </section>
-
+    <section id="web">
+      <h2>Webpage</h2>
+      <p><a href="https://yllivct.github.io/finalproject-vr/" target="_blank" rel="noopener noreferrer">Project webpage</a></p>
+    </section>
     <div id="bottom"></div>
     <div class="back-actions">
       <a href="#top" class="btn">Back to top</a>
