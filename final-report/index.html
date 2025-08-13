@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Real-time VR Gaming with 3D Gaussian Splatting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>Real-time VR Gaming Pipeline based on 3D Gaussian Splatting</h1>
+      <p class="subtitle">Splatfacto improvements, 3DGS direct rasterization, Unity stylized shader, and Real-time adaptation</p>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="container">
+      <h2>Table of Contents</h2>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li>
+          <a href="#pipeline">Pipeline</a>
+          <ul>
+            <li><a href="#data-capture">Data capture and calibration</a></li>
+            <li><a href="#online-adaptation">Online adaptation</a></li>
+            <li><a href="#rasterization-3dgs">3DGS direct rasterization</a></li>
+            <li><a href="#unity-shader">Unity stylized compositing shader</a></li>
+          </ul>
+        </li>
+        <li>
+          <a href="#impl-details">Implementation details</a>
+          <ul>
+            <li><a href="#producer">Producer: data capture</a></li>
+            <li><a href="#incremental-training">Incremental training</a></li>
+          </ul>
+        </li>
+        <li><a href="#results-performance">Results and performance</a></li>
+        <li><a href="#limitations">Limitations and outstanding work</a></li>
+        <li><a href="#references">References</a></li>
+        <li><a href="#contributions">Contributions</a></li>
+        <li><a href="#slides">Slides</a></li>
+      </ul>
+      <div class="toc-actions">
+        <a href="#top" class="btn">Back to top</a>
+        <a href="#bottom" class="btn">Go to bottom</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top" class="container content">
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Building on Splatfacto, we make real-time 3D VR gaming possible, with potential extension to nearly all AAA titles. Using previously exported Gaussians as a starting point, we run a few optimisation steps on new data, adapting within 0.5 seconds. Moreover, 3DGS supports direct rasterisation, achieving 90 FPS rendering. Compared with traditional Neural Radiance Fields (NeRF)—which require hours of training and ray-marching—3DGS offers near-instant training and direct GPU rasterization, enabling high-quality real-time rendering. </p>
+      <p>However, there are still some minor issues with optimising newly added Gaussians, so we are currently unable to present a seamless gameplay video.</p>
+    </section>
+
+    <section id="pipeline">
+      <h2>Pipeline</h2>
+      <section id="data-capture">
+        <h3>Data capture and calibration</h3>
+        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>.</p>
+      </section>
+      <section id="online-adaptation">
+        <h3>Online adaptation</h3>
+        <p>Starting from previously exported Gaussians, we run a few optimisation steps on newly arriving data and adapt within ~0.5 seconds to support real-time VR interaction and rendering.</p>
+      </section>
+      <section id="rasterization-3dgs">
+        <h3>3DGS direct rasterization</h3>
+        <p>In the rasterisation process, we project Gaussian primitives into the target camera view for image-space rendering, which yields improved visual quality and stable real-time frame rates (up to ~90 FPS in VR).</p>
+      </section>
+      <section id="unity-shader">
+        <h3>Unity stylized compositing shader</h3>
+        <p>In Unity URP, we implemented a sketch-style composite shader for 3D Gaussian Splatting that runs entirely in screen space (post-render). It applies tone quantization, Sobel edge detection, cross-hatching, and paper-grain noise, achieving real-time, customizable, VR-compatible illustrative effects.</p>
+      </section>
+    </section>
+
+    <section id="impl-details">
+      <h2>Implementation details</h2>
+      <section id="producer">
+        <h3>Producer: data capture</h3>
+        <ul>
+          <li><b>Transport recommendations</b>: intra-host → shared memory via mmap ring buffer; cross-host → UDP or WebRTC DataChannel (PR-SCTP with partial reliability).</li>
+          <li><b>Compression</b>: use libjpeg-turbo (JPEG) or libwebp (WebP). 720p is sufficient for training.</li>
+          <li><b>Pose</b>: unify world coordinates and camera intrinsics/extrinsics (fx, fy, cx, cy + [R|t]) and attach per-frame timestamps.</li>
+        </ul>
+        <p>Python capture & UDP sender (minimal):</p>
+        <pre><code class="language-python"># producer_send.py
+import cv2, socket, struct, json, time
+from turbojpeg import TurboJPEG
+jpeg = TurboJPEG()
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+DEST = ("127.0.0.1", 50051)
+
+def send_frame(frame_bgr, intr, extr, seq):
+    jpg = jpeg.encode(frame_bgr, quality=85)  # compress
+    header = {
+        "seq": seq, "ts": time.time_ns(),
+        "intr": intr,          # {"fx":..., "fy":..., "cx":..., "cy":...}
+        "extr": extr,          # {"R":[9], "t":[3]}
+    }
+    h = json.dumps(header).encode("utf-8")
+    pkt = struct.pack("!I", len(h)) + h + jpg
+    sock.sendto(pkt, DEST)
+
+# example capture
+cap = cv2.VideoCapture(0)  # or frames from the game render pipeline
+seq = 0
+while True:
+    ret, frame = cap.read()
+    if not ret: break
+    intr = {"fx":800,"fy":800,"cx":640,"cy":360}
+    extr = {"R":[1,0,0,0,1,0,0,0,1], "t":[0,0,0]}
+    send_frame(frame, intr, extr, seq)
+    seq += 1
+    time.sleep(1/5)  # 5 FPS</code></pre>
+      </section>
+
+      <section id="incremental-training">
+        <h3>Incremental training (Splatfacto/gsplat modifications)</h3>
+        <ol>
+          <li><b>Data ingestion and buffering</b>: build a lock-free ring buffer (or asyncio queue) to store the latest N seconds of frames (e.g., a 2–4 s window). Trigger policy: fire a tuning step every 10 frames or 0.5 s.</li>
+          <li><b>Optimize only Gaussians in relevant regions</b>: project the new frame to screen, compute a reprojection error heatmap, back-project and cluster to hit Gaussian IDs, then set only those parameters to requires_grad=True and freeze the rest. Typical parameters: μ(xyz), scale(3), rot(quat4), opacity(1), sh(N) with SH degree 0–3. In Splatfacto these are PyTorch tensors; use masked indexing to select subsets.</li>
+          <li><b>Optimizer and steps</b>: Adam with a small learning rate (1e-3 → 1e-4), ~100 steps per round. Loss = L2 (or L1) on new frames + detail/edge-weighted terms + regularization (anti-drift). Density control by new-view statistics only: growth by cloning/perturbing around high-gradient or sparse-coverage projections; pruning by marking long-unhit/low-contribution Gaussians and removing in batches.</li>
+          <li><b>Versioning and persistent IDs</b>: assign a global ID per Gaussian; record adds/deletes; keep the last snapshot/hash for diffing.</li>
+        </ol>
+        <p>Incremental training main loop:</p>
+        <pre><code class="language-python"># trainer_incremental.py
+opt = torch.optim.Adam(params=get_frozen_aware_params(model), lr=1e-3)
+last_snapshot = None
+SEQ = 0
+
+while True:
+    batch = ring_buffer.pop_last_10_frames_or_timeout(0.5)
+    if not batch: continue
+
+    # select relevant Gaussians
+    active_ids = select_gaussians_by_reproj_error(model, batch)
+    model.set_trainable_subset(active_ids)  # others requires_grad=False
+
+    for step in range(100):
+        loss = render_loss_on_batch(model, batch)
+        opt.zero_grad(set_to_none=True)
+        loss.backward()
+        clip_gradients(model, max_norm=1.0)
+        opt.step()
+
+    # local density control (grow/prune)
+    grow_ids, prune_ids = density_control(model, batch)
+    apply_grow_prune(model, grow_ids, prune_ids)
+
+    # compute diff
+    diff = compute_param_diff(model, last_snapshot, eps_pos=1e-3, eps_rot=1e-3, eps_sh=2e-3)
+    pkt = pack_diff_binary(diff, seq=SEQ)
+    send_udp(pkt)
+    last_snapshot = take_lightweight_snapshot(model)
+    SEQ += 1</code></pre>
+      </section>
+
+      <div style="display: flex; flex-direction: column; align-items: center;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td style="text-align: center;">
+					<img src="1.jpg" width="300px"/>
+					</td>
+					<td style="text-align: center;">
+					<img src="2.jpg" width="300px"/>
+					</td>
+				</tr>
+				</table>
+			</div>
+      
+    </section>
+
+    <section id="results-performance">
+      <h2>Results and performance</h2>
+      <ul>
+        <li>Direct rasterisation reaches around 90 FPS on VR devices.</li>
+        <li>We improved Splatfacto by using high-order spherical harmonics to guide low-order harmonics (shortening rendering time) and by applying lossless octree compression to reduce the runtime burden on VR devices. These yield roughly a 3× speedup in visual rendering for VR.</li>
+      </ul>
+    </section>
+
+    <section id="limitations">
+      <h2>Limitations and outstanding work</h2>
+      <p>Minor issues remain in optimising newly added Gaussians, so a fully seamless in-game video is not yet available. We will further improve the stability and efficiency of online incremental optimisation.</p>
+    </section>
+
+    <section id="references">
+      <h2>References</h2>
+      <ul>
+        <li>Nerfstudio: <a href="https://github.com/nerfstudio-project/nerfstudio">https://github.com/nerfstudio-project/nerfstudio</a></li>
+				<li>Unity Plugin: <a href="https://github.com/clarte53/GaussianSplattingVRViewerUnity">https://github.com/clarte53/GaussianSplattingVRViewerUnity</a></li>
+      </ul>
+      
+    </section>
+
+    <section id="contributions">
+      <h2>Contributions</h2>
+      <ul>
+        <li>Yuanchen Li: Implemented incremental development of Splatfacto, improving it by using high-order spherical harmonics to guide low-order harmonics, thereby shortening rendering time, and by applying lossless octree compression to reduce the runtime burden on VR devices.</li>
+        <li>Yihong Zhai: Contributed to the composite shader and collaborated with Yuanchen Li to implement the initial functionality for immersive viewing of 3D Gaussian scenes in virtual reality .</li>
+        <li>Songyan Li: Developed tools to generate image dataset and relevant pose information automatically, exporting COLMAP-compatible files for efficient 3DGS model training.</li>
+        <li>Yanshi Liang: Configured and optimized a high-performance cloud GPU environment, managed all necessary dependencies, and successfully ran Splatfacto to train the 3DGS model.</li>
+      </ul>
+    </section>
+
+    <section id="slides">
+      <h2>Slides</h2>
+      <p><a href="https://docs.google.com/presentation/d/1e1MfzwDeM5sMufKstMoeIVbf6FXoECNg/edit?usp=sharing" target="_blank" rel="noopener noreferrer">slides</a></p>
+    </section>
+    <section id="video">
+      <h2>Final project video</h2>
+      <p><a href="https://drive.google.com/file/d/1z2whwAXHTwakzi7Toj7iCwKV7kWTav08/view?usp=sharing" target="_blank" rel="noopener noreferrer">video</a></p>
+    </section>
+    <section id="video">
+      <h2>Rendered video</h2>
+      <p><a href="https://drive.google.com/file/d/1mqMTbkxleVjBEfiODGoGE1zssvUoDfW-/view?usp=sharing" target="_blank" rel="noopener noreferrer">video1</a></p>
+      <p><a href="https://drive.google.com/file/d/1oApVXycO-IqkhuH1vR7c_Y3HpGADu_q8/view?usp=sharing" target="_blank" rel="noopener noreferrer">video2</a></p>
+    </section>
+
+    <div id="bottom"></div>
+    <div class="back-actions">
+      <a href="#top" class="btn">Back to top</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© 2025 Project website template</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    if ('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
+  </script>
+</body>
+</html>
+
+
