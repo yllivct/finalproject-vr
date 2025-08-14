@@ -58,21 +58,36 @@
     <section id="pipeline">
       <h2>Pipeline</h2>
       <section id="data-capture">
+        
+
+			</div>
+        <h3>Data capture and calibration</h3>
+        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>. </p>
+        <p>Due to the complexity of the game graphics, we have applied blurring techniques to the images, including Gaussian blur and K-means clustering for color simplification, to reduce modeling difficulty.</p>
         <div style="display: flex; flex-direction: column; align-items: center;">
 				<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
 					<td style="text-align: center;">
-					<img src="1-1.png" width="350px"/>
+					<img src="1-1.png" width="400px"/>
+          <figcaption>Before</figcaption>
 					</td>
 					<td style="text-align: center;">
-					<img src="1-2.png" width="350px"/>
+					<img src="1-2.png" width="400px"/>
+          <figcaption>After</figcaption>
 					</td>
 				</tr>
 				</table>
-
-			</div>
-        <h3>Data capture and calibration</h3>
-        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>. Due to the complexity of the game graphics, we have applied blurring techniques to the images, including Gaussian blur and K-means clustering for color simplification, to reduce modeling difficulty.</p>
+        <table style="width: 100%; text-align: center; border-collapse: collapse;">
+        <p>Then we input all the files into COLMAP for sparse reconstruction to generate a 3D point cloud model.</p>
+				<tr>
+					<td style="text-align: center;">
+					<img src="2-1.png" width="350px"/>
+					</td>
+					<td style="text-align: center;">
+					<img src="2-2.png" width="350px"/>
+					</td>
+				</tr>
+				</table>
       </section>
       <section id="online-adaptation">
         <h3>Online adaptation</h3>
@@ -187,10 +202,10 @@ while True:
 				<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
 					<td style="text-align: center;">
-					<img src="1.jpg" width="350px"/>
+					<img src="1.jpg" width="400px"/>
 					</td>
 					<td style="text-align: center;">
-					<img src="2.jpg" width="350px"/>
+					<img src="2.jpg" width="400px"/>
 					</td>
 				</tr>
 				</table>
@@ -245,7 +260,7 @@ while True:
     </section>
     <section id="web">
       <h2>Webpage</h2>
-      <p><a href="https://yllivct.github.io/finalproject-vr/" target="_blank" rel="noopener noreferrer">Project webpage</a></p>
+      <p><a href="https://yllivct.github.io/finalproject-vr/final-report" target="_blank" rel="noopener noreferrer">Project webpage</a></p>
     </section>
     <div id="bottom"></div>
     <div class="back-actions">
