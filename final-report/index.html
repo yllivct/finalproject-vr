@@ -49,22 +49,25 @@
   </nav>
 
   <main id="top" class="container content">
+    <figure  style="text-align: center;">
+			<img src="final.png" style="width:800px"/>
+			<figcaption>Final result: Reconstruction of Cyberpunk 2077 scenes</figcaption>
+		</figure>
     <section id="overview">
       <h2>Overview</h2>
       <p>Building on Splatfacto, we make real-time 3D VR gaming possible, with potential extension to nearly all AAA titles. Using previously exported Gaussians as a starting point, we run a few optimisation steps on new data, adapting within 0.5 seconds. Moreover, 3DGS supports direct rasterisation, achieving 90 FPS rendering. Compared with traditional Neural Radiance Fields (NeRF)—which require hours of training and ray-marching—3DGS offers near-instant training and direct GPU rasterization, enabling high-quality real-time rendering. </p>
-      <p>However, there are still some minor issues with optimising newly added Gaussians, so we are currently unable to present a seamless gameplay video.</p>
+      <p>For this project, we reconstructed a statue in <i>Cyberpunk 2077</i> using 825 scenes captured from the game. You can find the video at the bottom of the page.</p>
     </section>
 
     <section id="pipeline">
       <h2>Pipeline</h2>
       <section id="data-capture">
         
-
 			</div>
         <h3>Data capture and calibration</h3>
-        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>. </p>
+        <p>We capture images from AAA games such as Cyberpunk 2077. Using Cyber Engine Tweaks, the official mod constructer, we capture the character’s position and view every two seconds, trigger an external Python script via <code>trigger_screenshot.txt</code> to grab screenshots with OBS Studio, and convert the recorded <code>data.csv</code> into COLMAP-format <code>cameras.txt</code> and <code>images.txt</code>. </p>
         <p>Due to the complexity of the game graphics, we have applied blurring techniques to the images, including Gaussian blur and K-means clustering for color simplification, to reduce modeling difficulty.</p>
-        <div style="display: flex; flex-direction: column; align-items: center;">
+        
 				<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
 					<td style="text-align: center;">
@@ -77,6 +80,7 @@
 					</td>
 				</tr>
 				</table>
+        
         <p>Then we input all the files into COLMAP for sparse reconstruction to generate a 3D point cloud model.</p>
         <table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
@@ -247,16 +251,17 @@ while True:
 
     <section id="slides">
       <h2>Slides</h2>
-      <p><a href="https://docs.google.com/presentation/d/1e1MfzwDeM5sMufKstMoeIVbf6FXoECNg/edit?usp=sharing" target="_blank" rel="noopener noreferrer">slides</a></p>
+      <p><a href="https://docs.google.com/presentation/d/1e1MfzwDeM5sMufKstMoeIVbf6FXoECNg/edit?usp=sharing" target="_blank" rel="noopener noreferrer">Slides</a></p>
     </section>
     <section id="video">
-      <h2>Final project video</h2>
-      <p><a href="https://drive.google.com/file/d/1z2whwAXHTwakzi7Toj7iCwKV7kWTav08/view?usp=sharing" target="_blank" rel="noopener noreferrer">video</a></p>
+      <h2>3DGS video</h2>
+      <p><a href="https://drive.google.com/file/d/1z2whwAXHTwakzi7Toj7iCwKV7kWTav08/view?usp=sharing" target="_blank" rel="noopener noreferrer">Room</a></p>
+      <p><a href="https://drive.google.com/file/d/1XRSc9MBv1U8WQehqmVPPClXwpHC936ie/view?usp=sharing" target="_blank" rel="noopener noreferrer">Cyberpunk 2077</a></p>
     </section>
     <section id="video">
-      <h2>Rendered video</h2>
-      <p><a href="https://drive.google.com/file/d/1mqMTbkxleVjBEfiODGoGE1zssvUoDfW-/view?usp=sharing" target="_blank" rel="noopener noreferrer">video1</a></p>
-      <p><a href="https://drive.google.com/file/d/1oApVXycO-IqkhuH1vR7c_Y3HpGADu_q8/view?usp=sharing" target="_blank" rel="noopener noreferrer">video2</a></p>
+      <h2>Shader video</h2>
+      <p><a href="https://drive.google.com/file/d/1mqMTbkxleVjBEfiODGoGE1zssvUoDfW-/view?usp=sharing" target="_blank" rel="noopener noreferrer">Shader1</a></p>
+      <p><a href="https://drive.google.com/file/d/1oApVXycO-IqkhuH1vR7c_Y3HpGADu_q8/view?usp=sharing" target="_blank" rel="noopener noreferrer">Shader2</a></p>
     </section>
     <section id="web">
       <h2>Webpage</h2>
